@@ -304,7 +304,7 @@ const Dashboard = () => {
     setError(null);
     try {
       // Calling your Flask backend
-      const response = await axios.get(`http://127.0.0.1:5000/predict`, {
+      const response = await axios.get(`https://cierra-saxicolous-acapella.ngrok-free.dev/predict`, {
         params: { region, include_prices: includePrices }
       });
       
