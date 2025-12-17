@@ -6,11 +6,8 @@ from sklearn.metrics import mean_absolute_error
 from sklearn.linear_model import LinearRegression
 from sklearn.neighbors import KNeighborsRegressor
 from sklearn.tree import DecisionTreeRegressor
-from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor, AdaBoostRegressor, BaggingRegressor
+from sklearn.ensemble import RandomForestRegressor
 from sklearn.svm import SVR
-from sklearn.neural_network import MLPRegressor
-
-regions = ['PJM RTO', 'Mid Atlantic - Dominion', 'Western']
 
 def loadData(filepath):
     try:
@@ -70,11 +67,7 @@ def findBestModel(X, Y):
         'KNN': KNeighborsRegressor(n_neighbors=min(int(np.sqrt(totalRows)), 20)), 
         'Decision Tree': DecisionTreeRegressor(random_state=42),
         'Random Forest': RandomForestRegressor(n_estimators=100, random_state=42),
-        'Gradient Boosting': GradientBoostingRegressor(random_state=42),
-        'AdaBoost': AdaBoostRegressor(random_state=42),
-        'Bagging': BaggingRegressor(random_state=42),
-        'SVR': SVR(),
-        'MLP Neural Net': MLPRegressor(random_state=42, max_iter=1000)
+        'SVR': SVR()
     }
 
     bestName, bestModel, bestScore = None, None, float('inf')
@@ -165,7 +158,7 @@ def trainAndForecast(outageDf, priceDf, region):
             
             model, modelName, modelError = findBestModel(XPriceTrain, YPriceTrain)
             predPrice = model.predict(inputRow)[0]
-            print(f"{pCol}: ${round(predPrice, 2)}")
+            print(f"   {pCol}: ${round(predPrice, 2)}")
 
 if __name__ == "__main__":
     print("Loading outage dataset...")
