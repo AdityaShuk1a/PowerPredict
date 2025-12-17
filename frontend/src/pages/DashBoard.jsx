@@ -1,7 +1,25 @@
-import React, { useState, useEffect } from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, AreaChart, Area } from 'recharts';
-import { Zap, Activity, TrendingUp, Calendar, AlertTriangle, DollarSign } from 'lucide-react';
-import axios from 'axios';
+import React, { useState, useEffect } from "react";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  AreaChart,
+  Area,
+} from "recharts";
+import {
+  Zap,
+  Activity,
+  TrendingUp,
+  Calendar,
+  AlertTriangle,
+  DollarSign,
+} from "lucide-react";
+import axios from "axios";
 
 // --- EMBEDDED CSS ---
 const styles = `
@@ -292,34 +310,37 @@ const styles = `
 
 const Dashboard = () => {
   // State
-  const [region, setRegion] = useState('Western');
+  const [region, setRegion] = useState("Western");
   const [includePrices, setIncludePrices] = useState(true);
   const [loading, setLoading] = useState(false);
   const [gridData, setGridData] = useState([]);
   const [error, setError] = useState(null);
 
   // Fetch Data
+  const API_URL = "https://cierra-saxicolous-acapella.ngrok-free.dev"; 
   const fetchForecast = async () => {
     setLoading(true);
     setError(null);
     try {
-      // Calling your Flask backend
-      const response = await axios.get(`https://cierra-saxicolous-acapella.ngrok-free.dev/predict`, {
-        params: { region, include_prices: includePrices }
+      // Calling your Flask backend via Ngrok
+      const response = await axios.get(`${API_URL}/predict`, {
+        params: { region, include_prices: includePrices },
+        headers: {
+          "ngrok-skip-browser-warning": "69420", // Bypasses the Ngrok warning page
+          "Content-Type": "application/json",
+        },
       });
-      
+
+      // ... rest of your logic ...
       const { history, forecast } = response.data.data;
-      
-      // Merge history and forecast for the graph
       const mergedData = [
-        ...history.map(d => ({ ...d, isForecast: false })),
-        ...forecast.map(d => ({ ...d, isForecast: true }))
+        ...history.map((d) => ({ ...d, isForecast: false })),
+        ...forecast.map((d) => ({ ...d, isForecast: true })),
       ];
-      
       setGridData(mergedData);
     } catch (err) {
       console.error(err);
-      setError("Failed to fetch data. Is the Flask server running?");
+      setError("Failed to fetch data. Check if Ngrok URL is updated.");
     } finally {
       setLoading(false);
     }
@@ -348,7 +369,6 @@ const Dashboard = () => {
     <>
       <style>{styles}</style>
       <div className="dashboard-container">
-        
         {/* Header */}
         <div className="dashboard-header">
           <div className="header-title-section">
@@ -356,13 +376,15 @@ const Dashboard = () => {
               <Zap className="title-icon" />
               PJM Grid Intelligence
             </h1>
-            <p className="app-subtitle">AI-Powered Outage & Price Forecasting System</p>
+            <p className="app-subtitle">
+              AI-Powered Outage & Price Forecasting System
+            </p>
           </div>
-          
+
           {/* Controls */}
           <div className="controls-section">
-            <select 
-              value={region} 
+            <select
+              value={region}
               onChange={(e) => setRegion(e.target.value)}
               className="region-select"
             >
@@ -370,13 +392,13 @@ const Dashboard = () => {
               <option value="PJM RTO">PJM RTO (Entire Grid)</option>
               <option value="Mid Atlantic - Dominion">Mid-Atlantic</option>
             </select>
-            
-            <button 
+
+            <button
               onClick={fetchForecast}
               className="update-button"
               disabled={loading}
             >
-              {loading ? 'Analyzing...' : 'Update Forecast'}
+              {loading ? "Analyzing..." : "Update Forecast"}
             </button>
           </div>
         </div>
@@ -394,29 +416,47 @@ const Dashboard = () => {
         {/* Stats Row */}
         {gridData.length > 0 && (
           <div className="stats-grid">
-            <StatCard 
-              title="Current Outage" 
-              value={`${gridData[gridData.length - 6].outage_mw} MW`} 
-              icon={Activity} 
-              colorClass="icon-blue" 
+            <StatCard
+              title="Current Outage"
+              value={`${gridData[gridData.length - 6].outage_mw} MW`}
+              icon={Activity}
+              colorClass="icon-blue"
             />
-            <StatCard 
-              title="5-Day Trend" 
-              value={gridData[gridData.length - 1].outage_mw > gridData[gridData.length - 6].outage_mw ? 'Increasing ↗' : 'Decreasing ↘'} 
-              icon={TrendingUp} 
-              colorClass={gridData[gridData.length - 1].outage_mw > gridData[gridData.length - 6].outage_mw ? "icon-red" : "icon-green"} 
+            <StatCard
+              title="5-Day Trend"
+              value={
+                gridData[gridData.length - 1].outage_mw >
+                gridData[gridData.length - 6].outage_mw
+                  ? "Increasing ↗"
+                  : "Decreasing ↘"
+              }
+              icon={TrendingUp}
+              colorClass={
+                gridData[gridData.length - 1].outage_mw >
+                gridData[gridData.length - 6].outage_mw
+                  ? "icon-red"
+                  : "icon-green"
+              }
             />
-            <StatCard 
-              title="Forecast Horizon" 
-              value="5 Days" 
-              icon={Calendar} 
-              colorClass="icon-purple" 
+            <StatCard
+              title="Forecast Horizon"
+              value="5 Days"
+              icon={Calendar}
+              colorClass="icon-purple"
             />
-            <StatCard 
-              title="Avg Predicted Price (Gas)" 
-              value={`$${(gridData.slice(-5).reduce((acc, curr) => acc + (curr.predicted_prices?.natural_gas_price || 0), 0) / 5).toFixed(2)}`} 
-              icon={DollarSign} 
-              colorClass="icon-orange" 
+            <StatCard
+              title="Avg Predicted Price (Gas)"
+              value={`$${(
+                gridData
+                  .slice(-5)
+                  .reduce(
+                    (acc, curr) =>
+                      acc + (curr.predicted_prices?.natural_gas_price || 0),
+                    0
+                  ) / 5
+              ).toFixed(2)}`}
+              icon={DollarSign}
+              colorClass="icon-orange"
             />
           </div>
         )}
@@ -424,40 +464,67 @@ const Dashboard = () => {
         {/* Main Charts Area */}
         {gridData.length > 0 && (
           <div className="charts-layout">
-            
             {/* Outage Trend Chart */}
             <div className="chart-card main-chart">
-              <h2 className="card-title">Total Outage Trend (History vs Forecast)</h2>
+              <h2 className="card-title">
+                Total Outage Trend (History vs Forecast)
+              </h2>
               <div className="chart-wrapper">
                 <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={gridData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                  <AreaChart
+                    data={gridData}
+                    margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+                  >
                     <defs>
-                      <linearGradient id="colorOutage" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.2}/>
-                        <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                      <linearGradient
+                        id="colorOutage"
+                        x1="0"
+                        y1="0"
+                        x2="0"
+                        y2="1"
+                      >
+                        <stop
+                          offset="5%"
+                          stopColor="#3b82f6"
+                          stopOpacity={0.2}
+                        />
+                        <stop
+                          offset="95%"
+                          stopColor="#3b82f6"
+                          stopOpacity={0}
+                        />
                       </linearGradient>
                     </defs>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
-                    <XAxis dataKey="date" tick={{fontSize: 12}} />
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      vertical={false}
+                      stroke="#f0f0f0"
+                    />
+                    <XAxis dataKey="date" tick={{ fontSize: 12 }} />
                     <YAxis unit=" MW" />
-                    <Tooltip 
-                      contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}
+                    <Tooltip
+                      contentStyle={{
+                        borderRadius: "8px",
+                        border: "none",
+                        boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+                      }}
                     />
                     <Legend />
-                    <Area 
-                      type="monotone" 
-                      dataKey="outage_mw" 
-                      stroke="#3b82f6" 
+                    <Area
+                      type="monotone"
+                      dataKey="outage_mw"
+                      stroke="#3b82f6"
                       strokeWidth={3}
-                      fillOpacity={1} 
-                      fill="url(#colorOutage)" 
+                      fillOpacity={1}
+                      fill="url(#colorOutage)"
                       name="Outage (MW)"
                     />
                   </AreaChart>
                 </ResponsiveContainer>
               </div>
               <p className="chart-footer">
-                The graph transitions from actual historical data to ML-predicted values for the next 5 days.
+                The graph transitions from actual historical data to
+                ML-predicted values for the next 5 days.
               </p>
             </div>
 
@@ -466,34 +533,65 @@ const Dashboard = () => {
               <h2 className="card-title">Forecasted Fuel Prices</h2>
               <div className="chart-wrapper">
                 <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={gridData.filter(d => d.isForecast)}>
+                  <LineChart data={gridData.filter((d) => d.isForecast)}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                    <XAxis dataKey="date" tick={{fontSize: 10}} />
+                    <XAxis dataKey="date" tick={{ fontSize: 10 }} />
                     <YAxis prefix="$" width={40} />
                     <Tooltip />
-                    <Legend wrapperStyle={{paddingTop: '20px'}}/>
-                    
-                    <Line type="monotone" dataKey="predicted_prices.natural_gas_price" name="Gas" stroke="#f97316" strokeWidth={2} dot={false} />
-                    <Line type="monotone" dataKey="predicted_prices.coal_price" name="Coal" stroke="#4b5563" strokeWidth={2} dot={false} />
-                    <Line type="monotone" dataKey="predicted_prices.solar_price" name="Solar" stroke="#eab308" strokeWidth={2} dot={false} />
-                    <Line type="monotone" dataKey="predicted_prices.wind_price" name="Wind" stroke="#0ea5e9" strokeWidth={2} dot={false} />
+                    <Legend wrapperStyle={{ paddingTop: "20px" }} />
+
+                    <Line
+                      type="monotone"
+                      dataKey="predicted_prices.natural_gas_price"
+                      name="Gas"
+                      stroke="#f97316"
+                      strokeWidth={2}
+                      dot={false}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="predicted_prices.coal_price"
+                      name="Coal"
+                      stroke="#4b5563"
+                      strokeWidth={2}
+                      dot={false}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="predicted_prices.solar_price"
+                      name="Solar"
+                      stroke="#eab308"
+                      strokeWidth={2}
+                      dot={false}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="predicted_prices.wind_price"
+                      name="Wind"
+                      stroke="#0ea5e9"
+                      strokeWidth={2}
+                      dot={false}
+                    />
                   </LineChart>
                 </ResponsiveContainer>
               </div>
               <div className="price-list">
-                 <div className="price-header">
-                    <span>Date</span>
-                    <span className="bold-header">Gas Price</span>
-                 </div>
-                 {gridData.filter(d => d.isForecast).map(day => (
-                   <div key={day.date} className="price-row">
+                <div className="price-header">
+                  <span>Date</span>
+                  <span className="bold-header">Gas Price</span>
+                </div>
+                {gridData
+                  .filter((d) => d.isForecast)
+                  .map((day) => (
+                    <div key={day.date} className="price-row">
                       <span className="price-date">{day.date}</span>
-                      <span className="price-val">${day.predicted_prices?.natural_gas_price}</span>
-                   </div>
-                 ))}
+                      <span className="price-val">
+                        ${day.predicted_prices?.natural_gas_price}
+                      </span>
+                    </div>
+                  ))}
               </div>
             </div>
-
           </div>
         )}
       </div>
