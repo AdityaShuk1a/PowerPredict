@@ -316,22 +316,18 @@ const Dashboard = () => {
   const [gridData, setGridData] = useState([]);
   const [error, setError] = useState(null);
 
-  // Fetch Data
-  const API_URL = "https://cierra-saxicolous-acapella.ngrok-free.dev"; 
   const fetchForecast = async () => {
     setLoading(true);
     setError(null);
     try {
-      // Calling your Flask backend via Ngrok
-      const response = await axios.get(`${API_URL}/predict`, {
+      // Direct localhost call (ensure server.py is running on port 5000)
+      const response = await axios.get(`http://127.0.0.1:5000/predict`, {
         params: { region, include_prices: includePrices },
         headers: {
-          "ngrok-skip-browser-warning": "69420", // Bypasses the Ngrok warning page
           "Content-Type": "application/json",
         },
       });
 
-      // ... rest of your logic ...
       const { history, forecast } = response.data.data;
       const mergedData = [
         ...history.map((d) => ({ ...d, isForecast: false })),
@@ -340,7 +336,7 @@ const Dashboard = () => {
       setGridData(mergedData);
     } catch (err) {
       console.error(err);
-      setError("Failed to fetch data. Check if Ngrok URL is updated.");
+      setError("Failed to fetch data. Is the local Flask server running?");
     } finally {
       setLoading(false);
     }

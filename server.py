@@ -12,10 +12,7 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.svm import SVR
 
 app = Flask(__name__)
-CORS(
-    app,
-    resources={r"/*": {"origins": "https://power-predict.vercel.app"}}
-)
+CORS(app)
 
 def loadData(filepath):
     try:
